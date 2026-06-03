@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ContactMethod {
+  EMAIL
+  PHONE
+  WHATSAPP
+}
+
+enum NotificationType {
+  NEW_POST
+  HAND_RAISED
+  COMMENT
+  COMMENT_REPLY
+  HAND_MESSAGE
+  HAND_MESSAGE_REPLY
+}
+
+model User {
+  id                String         @id
+  email             String         @unique
+  passwordHash      String         @map("password_hash")
+  name              String         @default("")
+  studentId         String?        @unique @map("student_id")
+  department        String?
+  bio               String?
+  avatar            String?
+  contactMethod     ContactMethod? @map("contact_method")
+  contactValue      String?        @map("contact_value")
+  contact           Json
+  isProfileComplete Boolean        @default(false) @map("is_profile_complete")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  posts             Post[]             @relation("PostAuthor")
+  hands             Hand[]
+  handMessages      HandMessage[]
+  comments          Comment[]
+  notifications     Notification[]
+  pushSubscriptions PushSubscription[]
+
+  @@map("users")
+}
+
+model Post {
+  id          String   @id
+  type        String
+  category    String
+  title       String
+  description String
+  location    String
+  images      String[] @default([])
+  authorId    String   @map("author_id")
+  authorName  String   @map("author_name")
+  contact     Json
+  status      String   @default("open")
+  important   Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  author      User      @relation("PostAuthor", fields: [authorId], references: [id])
+  hands        Hand[]
+  handMessages HandMessage[]
+  comments     Comment[]
+
+  @@index([authorId])
+  @@index([createdAt(sort: Desc)])
+  @@map("posts")
+}
+
+model Hand {
+  id        String        @id
+  postId    String        @map("post_id")
+  userId    String        @map("user_id")
+  userName  String        @map("user_name")
+  note      String
+  contact   Json
+  createdAt DateTime      @default(now()) @map("created_at")
+  post      Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  HandMessage[]
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@map("hands")
+}
+
+model HandMessage {
+  id        String        @id
+  handId    String        @map("hand_id")
+  postId    String        @map("post_id")
+  userId    String        @map("user_id")
+  userName  String        @map("user_name")
+  body      String
+  parentId  String?       @map("parent_id")
+  createdAt DateTime      @default(now()) @map("created_at")
+  hand      Hand          @relation(fields: [handId], references: [id], onDelete: Cascade)
+  post      Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    HandMessage?  @relation("HandMessageReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   HandMessage[] @relation("HandMessageReplies")
+
+  @@index([handId])
+  @@index([postId])
+  @@index([parentId])
+  @@index([createdAt(sort: Asc)])
+  @@map("hand_messages")
+}
+
+model Comment {
+  id        String    @id
+  postId    String    @map("post_id")
+  userId    String    @map("user_id")
+  userName  String    @map("user_name")
+  body      String
+  parentId  String?   @map("parent_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+
+  @@index([postId])
+  @@index([parentId])
+  @@index([createdAt(sort: Desc)])
+  @@map("comments")
+}
+
+model Notification {
+  id        String           @id
+  userId    String           @map("user_id")
+  type      NotificationType
+  title     String
+  body      String
+  link      String?
+  postId    String?          @map("post_id")
+  actorId   String?          @map("actor_id")
+  actorName String?          @map("actor_name")
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now()) @map("created_at")
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model PushSubscription {
+  id        String   @id
+  userId    String   @map("user_id")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
