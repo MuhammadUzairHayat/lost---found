@@ -87,16 +87,17 @@ export function PostCard({
 
   return (
     <article
-      className={`group relative flex h-full cursor-pointer flex-col overflow-hidden card-interactive ${cardStateClass}`}
+      className={`group relative flex h-full flex-col overflow-hidden card-interactive ${cardStateClass}`}
     >
       <Link
         href={postHref}
         className="absolute inset-0 z-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
         aria-label={`View post: ${post.title}`}
+        tabIndex={0}
       />
 
       {post.images.length > 0 ? (
-        <div className="relative">
+        <div className="relative pointer-events-none">
           <div className="block aspect-[3/2] overflow-hidden bg-surface">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -106,7 +107,7 @@ export function PostCard({
             />
           </div>
           {showMeta && (
-            <div className="pointer-events-none absolute left-2.5 top-2.5 z-10 flex flex-wrap gap-1">
+            <div className="absolute left-2.5 top-2.5 z-10 flex flex-wrap gap-1">
               {post.important && <ImportantMark />}
               <PostStatusBadge status={post.status} />
             </div>
@@ -118,11 +119,11 @@ export function PostCard({
             viewerHasHand={viewerHasHand}
             requireAuth={requireAuth}
             size="sm"
-            className="absolute bottom-2.5 right-2.5 z-10"
+            className="pointer-events-auto absolute bottom-2.5 right-2.5 z-10"
           />
         </div>
       ) : (
-        <div className="relative z-10 flex items-center justify-between gap-2 border-b border-line px-3 py-1.5">
+        <div className="relative z-[1] flex items-center justify-between gap-2 border-b border-line px-3 py-1.5 pointer-events-none">
           {showMeta ? (
             <div className="flex flex-wrap gap-1">
               {post.important && <ImportantMark />}
@@ -138,16 +139,17 @@ export function PostCard({
             viewerHasHand={viewerHasHand}
             requireAuth={requireAuth}
             size="xs"
+            className="pointer-events-auto"
           />
         </div>
       )}
 
-      <div className="relative z-[1] flex flex-1 flex-col gap-2.5 p-4">
+      <div className="relative z-[1] flex flex-1 flex-col gap-2.5 p-4 pointer-events-none">
         <div className="flex items-start gap-2">
           <Link
             href={typeFilterHref}
             title={`Filter by ${post.type} posts`}
-            className={`relative z-10 mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide transition-opacity hover:opacity-80 ${typeBadgeClass}`}
+            className={`pointer-events-auto relative z-10 mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide transition-opacity hover:opacity-80 ${typeBadgeClass}`}
           >
             {post.type}
           </Link>
@@ -156,7 +158,7 @@ export function PostCard({
           </h3>
         </div>
 
-        <div className="relative z-10 flex min-w-0 items-center gap-1.5 text-[11px] text-mute">
+        <div className="pointer-events-auto relative z-10 flex min-w-0 items-center gap-1.5 text-[11px] text-mute">
           {hideAuthor ? (
             <Link
               href={categoryFilterHref}
@@ -209,16 +211,14 @@ export function PostCard({
               {commentCount > 0 && (
                 <Link
                   href={commentsHref}
-                  className="text-[11px] font-medium text-body hover:text-ink hover:underline underline-offset-2"
+                  className="pointer-events-auto text-[11px] font-medium text-body hover:text-ink hover:underline underline-offset-2"
                 >
                   View
                 </Link>
               )}
             </div>
             {!commentCountOnly && (
-              <div className="relative z-10">
-                <CommentSlider comments={recentComments} compact />
-              </div>
+              <CommentSlider comments={recentComments} compact />
             )}
           </div>
         )}
