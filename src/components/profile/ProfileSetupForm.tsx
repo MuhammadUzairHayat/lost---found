@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useProfile } from "@/components/profile/ProfileProvider";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 import { DEPARTMENTS } from "@/lib/constants/departments";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 
@@ -17,6 +18,7 @@ const CONTACT_OPTIONS: { id: ContactMethodOption; label: string }[] = [
 export function ProfileSetupForm() {
   const router = useRouter();
   const { refreshProfile } = useProfile();
+  const toast = useToast();
   const searchParams = useSearchParams();
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
@@ -60,17 +62,15 @@ export function ProfileSetupForm() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(file.type)) {
-      setErrors((prev) => ({
-        ...prev,
-        avatar: "Image must be JPG, PNG, or WebP",
-      }));
+      const message = "Image must be JPG, PNG, or WebP";
+      setErrors((prev) => ({ ...prev, avatar: message }));
+      toast.warning(message);
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setErrors((prev) => ({
-        ...prev,
-        avatar: "Image must be less than 5MB",
-      }));
+      const message = "Image must be less than 5MB";
+      setErrors((prev) => ({ ...prev, avatar: message }));
+      toast.warning(message);
       return;
     }
 
@@ -92,19 +92,17 @@ export function ProfileSetupForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setErrors((prev) => ({
-          ...prev,
-          avatar: data.error ?? "Failed to upload image.",
-        }));
+        const message = data.error ?? "Failed to upload image.";
+        setErrors((prev) => ({ ...prev, avatar: message }));
+        toast.error(message);
         return;
       }
 
       setAvatar(data.url);
     } catch {
-      setErrors((prev) => ({
-        ...prev,
-        avatar: "Failed to upload image.",
-      }));
+      const message = "Failed to upload image.";
+      setErrors((prev) => ({ ...prev, avatar: message }));
+      toast.error(message);
     } finally {
       setAvatarUploading(false);
       e.target.value = "";
@@ -137,17 +135,24 @@ export function ProfileSetupForm() {
       if (!res.ok) {
         if (data.errors) {
           setErrors(data.errors);
+          toast.warning("Please fix the highlighted fields.");
         } else {
-          setErrors({ form: data.error || "Failed to save profile" });
+          const message = data.error || "Failed to save profile";
+          setErrors({ form: message });
+          toast.error(message);
         }
         return;
       }
+
+      toast.success(editMode ? "Profile updated." : "Profile completed.");
 
       await refreshProfile();
       router.push(callbackUrl);
       router.refresh();
     } catch {
-      setErrors({ form: "Something went wrong. Please try again." });
+      const message = "Something went wrong. Please try again.";
+      setErrors({ form: message });
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -313,8 +318,6 @@ export function ProfileSetupForm() {
       <p className="text-xs text-mute rounded-xl border border-line/80 bg-line/20 px-4 py-3">
         All fields marked with * are required
       </p>
-
-      {errors.form && <p className="text-error">{errors.form}</p>}
 
       <div className="flex flex-wrap justify-end gap-3">
         <button

@@ -8,6 +8,7 @@ import { useState } from "react";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useProfile } from "@/components/profile/ProfileProvider";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 
 
@@ -15,13 +16,12 @@ export function LoginForm() {
 
   const router = useRouter();
   const { refreshProfile } = useProfile();
+  const toast = useToast();
   const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
 
   const [password, setPassword] = useState("");
-
-  const [error, setError] = useState("");
 
   const [loading, setLoading] = useState(false);
 
@@ -36,8 +36,6 @@ export function LoginForm() {
   const submit = async (e: React.FormEvent) => {
 
     e.preventDefault();
-
-    setError("");
 
     setLoading(true);
 
@@ -71,7 +69,7 @@ export function LoginForm() {
 
     } catch (err) {
 
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
 
     } finally {
 
@@ -109,10 +107,6 @@ export function LoginForm() {
           className="field-input"
         />
       </label>
-
-
-
-      {error && <p className="text-error">{error}</p>}
 
 
 

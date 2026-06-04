@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ProfileProvider } from "@/components/profile/ProfileProvider";
 import { NotificationProvider } from "@/components/notifications/NotificationProvider";
+import { ToastProvider } from "@/components/ui/toast/ToastProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { themeInitScript } from "@/components/theme/theme-script";
 import { Header } from "@/components/layout/Header";
@@ -50,13 +51,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen font-sans flex flex-col`}
       >
         <ThemeProvider>
-          <ProfileProvider>
-            <NotificationProvider>
-              <Header />
-              <main className="flex-1 min-w-0">{children}</main>
-              <Footer />
-            </NotificationProvider>
-          </ProfileProvider>
+          <ToastProvider>
+            <ProfileProvider>
+              <NotificationProvider>
+                <Header />
+                <main className="flex-1 min-w-0">{children}</main>
+                <Footer />
+              </NotificationProvider>
+            </ProfileProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

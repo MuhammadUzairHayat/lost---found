@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ProfileLink } from "@/components/ui/ProfileLink";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 import type { Hand } from "@/lib/types";
 
 export function HandRaisedCard({
@@ -18,18 +19,17 @@ export function HandRaisedCard({
   onUpdated?: (hand: Hand) => void;
   onRemoved?: () => void;
 }) {
+  const toast = useToast();
   const [editing, setEditing] = useState(false);
   const [note, setNote] = useState(hand.note);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!editing) setNote(hand.note);
   }, [hand.note, editing]);
 
   const saveNote = async () => {
-    setError("");
     setLoading(true);
     try {
       const res = await fetch("/api/posts/hand", {
@@ -41,15 +41,15 @@ export function HandRaisedCard({
       if (!res.ok) throw new Error(data.error || "Failed to update");
       setEditing(false);
       onUpdated?.(data);
+      toast.success("Hand note updated.");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
   const lowerHand = async () => {
-    setError("");
     setLoading(true);
     try {
       const res = await fetch(
@@ -58,9 +58,10 @@ export function HandRaisedCard({
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to remove hand");
+      toast.success("Hand lowered.");
       onRemoved?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -124,7 +125,6 @@ export function HandRaisedCard({
                   onClick={() => {
                     setNote(hand.note);
                     setEditing(false);
-                    setError("");
                   }}
                   className="text-xs text-mute underline hover:text-ink"
                 >
@@ -149,7 +149,6 @@ export function HandRaisedCard({
                 onClick={() => {
                   setNote(hand.note);
                   setEditing(true);
-                  setError("");
                 }}
                 className="text-[10px] font-medium uppercase tracking-wide text-mute hover:text-ink"
               >
@@ -184,8 +183,6 @@ export function HandRaisedCard({
               )}
             </div>
           )}
-
-          {error && <p className="mt-2 text-xs text-ink">{error}</p>}
         </div>
       </div>
     </div>

@@ -199,8 +199,7 @@ export async function DELETE(request: Request) {
   }
 
   const isAuthor = comment.userId === auth.user.id;
-  const isPostOwner = post.authorId === auth.user.id;
-  if (!isAuthor && !isPostOwner) {
+  if (!isAuthor) {
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 

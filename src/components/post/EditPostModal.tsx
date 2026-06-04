@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CATEGORIES, POST_TYPES } from "@/lib/constants/constants";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 import { MAX_POST_IMAGES } from "@/lib/validation/images";
 import type { CategoryId, PostTypeId } from "@/lib/constants/constants";
 import type { Post } from "@/lib/types";
@@ -15,33 +16,33 @@ export function EditPostModal({
   onClose: () => void;
   onSaved: (post: Post) => void;
 }) {
+  const toast = useToast();
   const [type, setType] = useState<PostTypeId>(post.type);
   const [category, setCategory] = useState<CategoryId>(post.category);
   const [title, setTitle] = useState(post.title);
   const [description, setDescription] = useState(post.description);
   const [location, setLocation] = useState(post.location);
   const [images, setImages] = useState<string[]>(post.images);
-  const [imageError, setImageError] = useState("");
   const [uploadingCount, setUploadingCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+
+  const showImageError = (message: string) => toast.warning(message);
 
   const uploadImage = async (file: File) => {
     if (!["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(file.type)) {
-      setImageError("Images must be JPG, PNG, or WebP.");
+      showImageError("Images must be JPG, PNG, or WebP.");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setImageError("Each image must be less than 5MB.");
+      showImageError("Each image must be less than 5MB.");
       return;
     }
     if (images.length >= MAX_POST_IMAGES) {
-      setImageError(`Maximum ${MAX_POST_IMAGES} images allowed.`);
+      showImageError(`Maximum ${MAX_POST_IMAGES} images allowed.`);
       return;
     }
 
     setUploadingCount((c) => c + 1);
-    setImageError("");
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -49,30 +50,28 @@ export function EditPostModal({
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       const data = await res.json();
       if (!res.ok) {
-        setImageError(data.error ?? "Failed to upload image.");
+        showImageError(data.error ?? "Failed to upload image.");
         return;
       }
       setImages((prev) => [...prev, data.url]);
     } catch {
-      setImageError("Failed to upload image.");
+      showImageError("Failed to upload image.");
     } finally {
       setUploadingCount((c) => c - 1);
     }
   };
 
   const save = async () => {
-    setError("");
-    setImageError("");
     if (!title.trim()) {
-      setError("Enter a title.");
+      toast.warning("Enter a title.");
       return;
     }
     if (images.length === 0) {
-      setImageError("At least one image is required.");
+      showImageError("At least one image is required.");
       return;
     }
     if (uploadingCount > 0) {
-      setImageError("Wait for uploads to finish.");
+      showImageError("Wait for uploads to finish.");
       return;
     }
 
@@ -93,13 +92,14 @@ export function EditPostModal({
       });
       const data = await res.json();
       if (!res.ok) {
-        if (data.errors?.images) setImageError(data.errors.images);
+        if (data.errors?.images) showImageError(data.errors.images);
         throw new Error(data.error || data.errors?.title || "Failed to update");
       }
+      toast.success("Post updated.");
       onSaved({ ...post, ...data, contact: post.contact });
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed");
+      toast.error(e instanceof Error ? e.message : "Failed");
     } finally {
       setLoading(false);
     }
@@ -213,11 +213,8 @@ export function EditPostModal({
               }}
               className="mt-2 text-xs"
             />
-            {imageError && <p className="mt-1 text-xs text-ink">{imageError}</p>}
           </div>
         </div>
-
-        {error && <p className="mt-3 text-xs text-ink">{error}</p>}
 
         <div className="mt-5 flex gap-2">
           <button

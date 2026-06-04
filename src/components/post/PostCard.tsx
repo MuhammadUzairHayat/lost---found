@@ -87,21 +87,24 @@ export function PostCard({
 
   return (
     <article
-      className={`group flex h-full flex-col overflow-hidden card-interactive ${cardStateClass}`}
+      className={`group relative flex h-full cursor-pointer flex-col overflow-hidden card-interactive ${cardStateClass}`}
     >
+      <Link
+        href={postHref}
+        className="absolute inset-0 z-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
+        aria-label={`View post: ${post.title}`}
+      />
+
       {post.images.length > 0 ? (
         <div className="relative">
-          <Link
-            href={postHref}
-            className="block aspect-[3/2] overflow-hidden bg-surface"
-          >
+          <div className="block aspect-[3/2] overflow-hidden bg-surface">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={post.images[0]}
               alt=""
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             />
-          </Link>
+          </div>
           {showMeta && (
             <div className="pointer-events-none absolute left-2.5 top-2.5 z-10 flex flex-wrap gap-1">
               {post.important && <ImportantMark />}
@@ -119,7 +122,7 @@ export function PostCard({
           />
         </div>
       ) : (
-        <div className="flex items-center justify-between gap-2 border-b border-line px-3 py-1.5">
+        <div className="relative z-10 flex items-center justify-between gap-2 border-b border-line px-3 py-1.5">
           {showMeta ? (
             <div className="flex flex-wrap gap-1">
               {post.important && <ImportantMark />}
@@ -139,23 +142,21 @@ export function PostCard({
         </div>
       )}
 
-      <div className="flex flex-1 flex-col gap-2.5 p-4">
+      <div className="relative z-[1] flex flex-1 flex-col gap-2.5 p-4">
         <div className="flex items-start gap-2">
           <Link
             href={typeFilterHref}
             title={`Filter by ${post.type} posts`}
-            className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide transition-opacity hover:opacity-80 ${typeBadgeClass}`}
+            className={`relative z-10 mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide transition-opacity hover:opacity-80 ${typeBadgeClass}`}
           >
             {post.type}
           </Link>
-          <Link href={postHref} className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold leading-snug text-ink line-clamp-2 group-hover:underline underline-offset-2">
-              {post.title}
-            </h3>
-          </Link>
+          <h3 className="min-w-0 flex-1 text-sm font-semibold leading-snug text-ink line-clamp-2 group-hover:underline underline-offset-2">
+            {post.title}
+          </h3>
         </div>
 
-        <div className="flex items-center gap-1.5 text-[11px] text-mute min-w-0">
+        <div className="relative z-10 flex min-w-0 items-center gap-1.5 text-[11px] text-mute">
           {hideAuthor ? (
             <Link
               href={categoryFilterHref}
@@ -172,9 +173,9 @@ export function PostCard({
                 avatar={post.authorAvatar}
                 size="xxxs"
                 nameClassName="truncate font-medium text-ink text-[11px]"
-                className="flex items-center gap-1.5 min-w-0 shrink"
+                className="flex min-w-0 shrink items-center gap-1.5"
               />
-              <span className="text-subtle shrink-0">·</span>
+              <span className="shrink-0 text-subtle">·</span>
               <Link
                 href={categoryFilterHref}
                 title={`Filter by ${categoryLabel(post.category)}`}
@@ -200,7 +201,7 @@ export function PostCard({
         </p>
 
         {(commentCountOnly ? commentCount > 0 : hasComments) && (
-          <div className="mt-auto border-t border-line pt-2">
+          <div className="relative z-10 mt-auto border-t border-line pt-2">
             <div className="flex items-center justify-between gap-2">
               <span className="text-[11px] text-mute">
                 {commentCount} {commentCount === 1 ? "comment" : "comments"}
@@ -215,7 +216,9 @@ export function PostCard({
               )}
             </div>
             {!commentCountOnly && (
-              <CommentSlider comments={recentComments} compact />
+              <div className="relative z-10">
+                <CommentSlider comments={recentComments} compact />
+              </div>
             )}
           </div>
         )}

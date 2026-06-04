@@ -9,7 +9,6 @@ export function DeletePostModal({
   onClose,
   onConfirm,
   loading,
-  error,
 }: {
   postTitle: string;
   authorName: string;
@@ -17,7 +16,6 @@ export function DeletePostModal({
   onClose: () => void;
   onConfirm: () => void;
   loading?: boolean;
-  error?: string;
 }) {
   return (
     <div
@@ -50,8 +48,6 @@ export function DeletePostModal({
             removed permanently, including all comments and raised hands.
           </p>
         </div>
-
-        {error && <p className="mt-4 text-center text-xs text-ink">{error}</p>}
 
         <div className="mt-5 flex gap-2">
           <button

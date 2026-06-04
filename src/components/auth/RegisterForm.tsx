@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useProfile } from "@/components/profile/ProfileProvider";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 import { useMemo, useState } from "react";
 import {
   PASSWORD_REQUIREMENTS,
@@ -17,12 +18,12 @@ function fieldClass(hasError: boolean) {
 export function RegisterForm() {
   const router = useRouter();
   const { refreshProfile } = useProfile();
+  const toast = useToast();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<RegisterValidationErrors>({});
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
@@ -50,7 +51,6 @@ export function RegisterForm() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setTouched({ email: true, password: true, confirmPassword: true });
 
     const validation = validateRegisterInput({
@@ -60,6 +60,7 @@ export function RegisterForm() {
     });
     if (Object.keys(validation).length > 0) {
       setErrors(validation);
+      toast.warning("Please fix the highlighted fields.");
       return;
     }
 
@@ -88,7 +89,7 @@ export function RegisterForm() {
       router.push(dest);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -176,8 +177,6 @@ export function RegisterForm() {
           <p className="mt-1 text-error">{errors.confirmPassword}</p>
         )}
       </label>
-
-      {error && <p className="text-error">{error}</p>}
 
       <button
         type="submit"

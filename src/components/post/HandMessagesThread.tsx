@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ProfileLink } from "@/components/ui/ProfileLink";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useProfile } from "@/components/profile/ProfileProvider";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 import type { Hand, HandMessageWithReplies, Post } from "@/lib/types";
 import { timeAgo } from "@/lib/utils/time";
 
@@ -215,12 +216,12 @@ export function HandMessagesThread({
   post: Post;
 }) {
   const { profile, ready } = useProfile();
+  const toast = useToast();
   const [tree, setTree] = useState<HandMessageWithReplies[]>([]);
   const [total, setTotal] = useState(0);
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [error, setError] = useState("");
   const [replyTo, setReplyTo] = useState<{ id: string; userName: string } | null>(
     null
   );
@@ -245,9 +246,8 @@ export function HandMessagesThread({
   }, [refresh]);
 
   const submit = async () => {
-    setError("");
     if (!profile) {
-      setError("Sign in to send a message.");
+      toast.warning("Sign in to send a message.");
       return;
     }
     setLoading(true);
@@ -266,15 +266,15 @@ export function HandMessagesThread({
       setBody("");
       setReplyTo(null);
       await refresh();
+      toast.success("Message sent.");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
   const editMessage = async (messageId: string, text: string) => {
-    setError("");
     setActionLoading(true);
     try {
       const res = await fetch("/api/posts/hand/messages", {
@@ -285,8 +285,9 @@ export function HandMessagesThread({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update message");
       await refresh();
+      toast.success("Message updated.");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
       throw e;
     } finally {
       setActionLoading(false);
@@ -294,7 +295,6 @@ export function HandMessagesThread({
   };
 
   const deleteMessage = async (messageId: string) => {
-    setError("");
     setActionLoading(true);
     try {
       const res = await fetch(
@@ -304,8 +304,9 @@ export function HandMessagesThread({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to delete message");
       await refresh();
+      toast.success("Message deleted.");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setActionLoading(false);
     }
@@ -364,7 +365,6 @@ export function HandMessagesThread({
             className="field-input resize-none text-xs"
             placeholder="Message the poster or helper…"
           />
-          {error && <p className="text-xs text-ink">{error}</p>}
           <button
             type="button"
             onClick={submit}

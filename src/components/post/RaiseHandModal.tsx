@@ -7,12 +7,10 @@ export function RaiseHandModal({
   onClose,
   onSubmit,
   loading,
-  error,
 }: {
   onClose: () => void;
   onSubmit: (note: string) => Promise<void>;
   loading?: boolean;
-  error?: string;
 }) {
   const [note, setNote] = useState("");
 
@@ -54,7 +52,6 @@ export function RaiseHandModal({
             autoFocus
           />
         </label>
-        {error && <p className="mt-2 text-xs text-ink">{error}</p>}
         <div className="mt-4 flex gap-2">
           <button
             type="button"

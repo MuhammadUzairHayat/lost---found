@@ -11,14 +11,12 @@ export function MyHandModal({
   onSave,
   onRemove,
   loading,
-  error,
 }: {
   hand: Hand;
   onClose: () => void;
   onSave: (note: string) => Promise<void>;
   onRemove: () => Promise<void>;
   loading?: boolean;
-  error?: string;
 }) {
   const [note, setNote] = useState(hand.note);
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -66,8 +64,6 @@ export function MyHandModal({
             className="field-input resize-none"
           />
         </label>
-
-        {error && <p className="mt-2 text-xs text-ink">{error}</p>}
 
         <div className="mt-4 flex flex-col gap-2">
           <button

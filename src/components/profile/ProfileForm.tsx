@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import { ContactFields } from "@/components/ui/ContactFields";
 import { useProfile } from "@/components/profile/ProfileProvider";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 import { emptyContact } from "@/lib/db/profile";
 
 export function ProfileForm() {
   const { profile, setProfile, clearProfile, ready } = useProfile();
+  const toast = useToast();
   const [name, setName] = useState("");
   const [contact, setContact] = useState(emptyContact());
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -25,15 +25,16 @@ export function ProfileForm() {
   }
 
   const save = async () => {
-    if (!name.trim()) return;
-    setError("");
+    if (!name.trim()) {
+      toast.warning("Enter a display name.");
+      return;
+    }
     setLoading(true);
     try {
       await setProfile(name.trim(), contact);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      toast.success("Profile saved.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+      toast.error(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setLoading(false);
     }
@@ -71,10 +72,6 @@ export function ProfileForm() {
           Sign out
         </button>
       </div>
-      {error && <p className="text-error">{error}</p>}
-      {saved && (
-        <p className="text-xs text-mute animate-fade-up">Profile saved.</p>
-      )}
     </div>
   );
 }

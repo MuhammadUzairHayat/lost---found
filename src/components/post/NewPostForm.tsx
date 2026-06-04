@@ -5,40 +5,41 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CATEGORIES, POST_TYPES } from "@/lib/constants/constants";
 import { useProfile } from "@/components/profile/ProfileProvider";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 import { MAX_POST_IMAGES } from "@/lib/validation/images";
 import type { CategoryId, PostTypeId } from "@/lib/constants/constants";
 
 export function NewPostForm() {
   const router = useRouter();
   const { profile, ready } = useProfile();
+  const toast = useToast();
   const [type, setType] = useState<PostTypeId>("lost");
   const [category, setCategory] = useState<CategoryId>("other");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
   const [images, setImages] = useState<string[]>([]);
-  const [imageError, setImageError] = useState("");
   const [uploadingCount, setUploadingCount] = useState(0);
   const [important, setImportant] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+
+  const showImageError = (message: string) => toast.warning(message);
 
   const uploadImage = async (file: File) => {
     if (!["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(file.type)) {
-      setImageError("Images must be JPG, PNG, or WebP.");
+      showImageError("Images must be JPG, PNG, or WebP.");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setImageError("Each image must be less than 5MB.");
+      showImageError("Each image must be less than 5MB.");
       return;
     }
     if (images.length >= MAX_POST_IMAGES) {
-      setImageError(`Maximum ${MAX_POST_IMAGES} images allowed.`);
+      showImageError(`Maximum ${MAX_POST_IMAGES} images allowed.`);
       return;
     }
 
     setUploadingCount((count) => count + 1);
-    setImageError("");
 
     try {
       const formData = new FormData();
@@ -52,13 +53,13 @@ export function NewPostForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setImageError(data.error ?? "Failed to upload image.");
+        showImageError(data.error ?? "Failed to upload image.");
         return;
       }
 
       setImages((prev) => [...prev, data.url]);
     } catch {
-      setImageError("Failed to upload image.");
+      showImageError("Failed to upload image.");
     } finally {
       setUploadingCount((count) => count - 1);
     }
@@ -70,7 +71,7 @@ export function NewPostForm() {
 
     for (const file of files) {
       if (images.length + uploadingCount >= MAX_POST_IMAGES) {
-        setImageError(`Maximum ${MAX_POST_IMAGES} images allowed.`);
+        showImageError(`Maximum ${MAX_POST_IMAGES} images allowed.`);
         break;
       }
       await uploadImage(file);
@@ -79,32 +80,29 @@ export function NewPostForm() {
 
   const removeImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
-    setImageError("");
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setImageError("");
 
     if (!profile) {
-      setError("Sign in to publish a post.");
+      toast.warning("Sign in to publish a post.");
       return;
     }
     if (!profile.name?.trim()) {
-      setError("Complete your profile before posting.");
+      toast.warning("Complete your profile before posting.");
       return;
     }
     if (!title.trim()) {
-      setError("Enter a title.");
+      toast.warning("Enter a title.");
       return;
     }
     if (images.length === 0) {
-      setImageError("At least one image is required.");
+      showImageError("At least one image is required.");
       return;
     }
     if (uploadingCount > 0) {
-      setImageError("Wait for uploads to finish.");
+      showImageError("Wait for uploads to finish.");
       return;
     }
 
@@ -126,13 +124,14 @@ export function NewPostForm() {
       const data = await res.json();
       if (!res.ok) {
         if (data.errors?.images) {
-          setImageError(data.errors.images);
+          showImageError(data.errors.images);
         }
         throw new Error(data.error || data.errors?.title || "Failed to create post");
       }
+      toast.success("Post published.");
       router.push(`/posts/${data.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Failed");
     } finally {
       setLoading(false);
     }
@@ -260,9 +259,6 @@ export function NewPostForm() {
           />
         </label>
 
-        {imageError && (
-          <p className="text-error">{imageError}</p>
-        )}
       </fieldset>
 
       <label className="flex items-center gap-2 text-sm text-body cursor-pointer">
@@ -282,8 +278,6 @@ export function NewPostForm() {
         </Link>
         .
       </p>
-
-      {error && <p className="text-sm text-ink">{error}</p>}
 
       <button
         type="submit"

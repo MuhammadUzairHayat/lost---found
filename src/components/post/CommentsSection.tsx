@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CommentSlider } from "@/components/post/CommentSlider";
 import { UserIdentity } from "@/components/ui/UserIdentity";
 import { useProfile } from "@/components/profile/ProfileProvider";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 import type { Comment, CommentWithReplies } from "@/lib/types";
 import { timeAgo } from "@/lib/utils/time";
 
@@ -22,12 +23,12 @@ export function CommentsSection({
   initialTotal: number;
 }) {
   const { profile, ready } = useProfile();
+  const toast = useToast();
   const [expanded, setExpanded] = useState(false);
   const [tree, setTree] = useState(initialComments);
   const [total, setTotal] = useState(initialTotal);
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [replyTo, setReplyTo] = useState<{ id: string; userName: string } | null>(
     null
@@ -62,9 +63,8 @@ export function CommentsSection({
   previewFlat.reverse();
 
   const submit = async (parentId: string | null = null) => {
-    setError("");
     if (!profile) {
-      setError("Sign in and complete your profile to comment.");
+      toast.warning("Sign in and complete your profile to comment.");
       return;
     }
     setLoading(true);
@@ -80,15 +80,15 @@ export function CommentsSection({
       setReplyTo(null);
       await refresh();
       if (!expanded) setExpanded(true);
+      toast.success(parentId ? "Reply posted." : "Comment posted.");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
   const editComment = async (commentId: string, text: string) => {
-    setError("");
     setActionLoading(true);
     try {
       const res = await fetch("/api/posts/comments", {
@@ -99,8 +99,9 @@ export function CommentsSection({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update comment");
       await refresh();
+      toast.success("Comment updated.");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
       throw e;
     } finally {
       setActionLoading(false);
@@ -108,7 +109,6 @@ export function CommentsSection({
   };
 
   const removeComment = async (commentId: string) => {
-    setError("");
     setActionLoading(true);
     try {
       const res = await fetch(
@@ -118,8 +118,9 @@ export function CommentsSection({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to delete comment");
       await refresh();
+      toast.success("Comment deleted.");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setActionLoading(false);
     }
@@ -235,7 +236,6 @@ export function CommentsSection({
             </button>
           </div>
         )}
-        {error && <p className="text-xs text-ink mt-2">{error}</p>}
       </div>
 
       {!expanded && total === 0 && (
@@ -312,7 +312,6 @@ function CommentThread({
             comment={comment}
             compact={false}
             currentUserId={currentUserId}
-            postAuthorId={postAuthorId}
             onEdit={onEditComment}
             onDelete={onDeleteComment}
             actionLoading={actionLoading}
@@ -435,7 +434,6 @@ function NestedReply({
             comment={comment}
             compact
             currentUserId={currentUserId}
-            postAuthorId={postAuthorId}
             onEdit={onEditComment}
             onDelete={onDeleteComment}
             actionLoading={actionLoading}
@@ -518,7 +516,6 @@ function CommentBody({
   comment,
   compact,
   currentUserId,
-  postAuthorId,
   onEdit,
   onDelete,
   actionLoading,
@@ -526,7 +523,6 @@ function CommentBody({
   comment: Comment;
   compact?: boolean;
   currentUserId?: string;
-  postAuthorId: string;
   onEdit: (commentId: string, body: string) => Promise<void>;
   onDelete: (commentId: string) => Promise<void>;
   actionLoading: boolean;
@@ -535,8 +531,9 @@ function CommentBody({
   const [draft, setDraft] = useState(comment.body);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const canEdit = currentUserId === comment.userId;
-  const canDelete = canEdit || currentUserId === postAuthorId;
+  const canEdit =
+    Boolean(currentUserId) && currentUserId === comment.userId;
+  const canDelete = canEdit;
 
   const saveEdit = async () => {
     if (!draft.trim()) return;

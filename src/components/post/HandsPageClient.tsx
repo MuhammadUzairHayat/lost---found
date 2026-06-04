@@ -10,6 +10,7 @@ import { HandMessagesThread } from "@/components/post/HandMessagesThread";
 import { RaiseHandModal } from "@/components/post/RaiseHandModal";
 import { MyHandModal } from "@/components/post/MyHandModal";
 import { useProfile } from "@/components/profile/ProfileProvider";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 import { handChipClass } from "@/components/post/handChip";
 import { isPostOpenForHands } from "@/lib/posts/status";
 import type { Hand, Post } from "@/lib/types";
@@ -24,12 +25,12 @@ export function HandsPageClient({
   initialHands: Hand[];
 }) {
   const { profile, ready } = useProfile();
+  const toast = useToast();
   const router = useRouter();
   const [post] = useState(initialPost);
   const [hands, setHands] = useState(initialHands);
   const [modal, setModal] = useState<Modal>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const myHand = hands.find((h) => h.userId === profile?.id);
   const isOwner = profile?.id === post.authorId;
@@ -60,11 +61,9 @@ export function HandsPageClient({
 
   const closeModal = () => {
     setModal(null);
-    setError("");
   };
 
   const onTopHandClick = () => {
-    setError("");
     if (myHand) {
       setModal("mine");
       return;
@@ -77,7 +76,6 @@ export function HandsPageClient({
   const raiseHand = async (note: string) => {
     if (!profile) return;
     setLoading(true);
-    setError("");
     try {
       const res = await fetch(`/api/posts/hand`, {
         method: "POST",
@@ -92,9 +90,10 @@ export function HandsPageClient({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
       await refresh();
+      toast.success("Hand raised.");
       closeModal();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -103,7 +102,6 @@ export function HandsPageClient({
   const updateHand = async (note: string) => {
     if (!profile || !myHand) return;
     setLoading(true);
-    setError("");
     try {
       const res = await fetch(`/api/posts/hand`, {
         method: "PATCH",
@@ -113,9 +111,10 @@ export function HandsPageClient({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
       await refresh();
+      toast.success("Hand updated.");
       closeModal();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -124,7 +123,6 @@ export function HandsPageClient({
   const lowerHand = async () => {
     if (!profile) return;
     setLoading(true);
-    setError("");
     try {
       const res = await fetch(
         `/api/posts/hand?postId=${encodeURIComponent(post.id)}`,
@@ -135,9 +133,10 @@ export function HandsPageClient({
         throw new Error(data.error || "Failed");
       }
       await refresh();
+      toast.success("Hand lowered.");
       closeModal();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -214,10 +213,7 @@ export function HandsPageClient({
           {canRaise && (
             <button
               type="button"
-              onClick={() => {
-                setError("");
-                setModal("raise");
-              }}
+              onClick={() => setModal("raise")}
               className="mt-4 rounded-full bg-ink px-4 py-2 text-sm text-paper"
             >
               Be the first to raise your hand
@@ -266,7 +262,6 @@ export function HandsPageClient({
           onClose={closeModal}
           onSubmit={raiseHand}
           loading={loading}
-          error={error}
         />
       )}
       {modal === "mine" && myHand && (
@@ -276,7 +271,6 @@ export function HandsPageClient({
           onSave={updateHand}
           onRemove={lowerHand}
           loading={loading}
-          error={error}
         />
       )}
     </div>

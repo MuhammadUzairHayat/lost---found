@@ -13,6 +13,7 @@ import { CommentsSection } from "@/components/post/CommentsSection";
 import { DeletePostModal } from "@/components/post/DeletePostModal";
 import { EditPostModal } from "@/components/post/EditPostModal";
 import { useProfile } from "@/components/profile/ProfileProvider";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 import { isPostOpenForHands } from "@/lib/posts/status";
 import { formatPostedAt, timeAgo } from "@/lib/utils/time";
 import type { Hand, Post, CommentWithReplies } from "@/lib/types";
@@ -31,6 +32,7 @@ export function PostDetailClient({
   initialCommentCount: number;
 }) {
   const { profile, ready } = useProfile();
+  const toast = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [post, setPost] = useState(initialPost);
@@ -38,7 +40,6 @@ export function PostDetailClient({
   const [editPostOpen, setEditPostOpen] = useState(false);
   const [confirmDeletePost, setConfirmDeletePost] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const myHand = hands.find((h) => h.userId === profile?.id);
   const isOwner = profile?.id === post.authorId;
@@ -57,7 +58,6 @@ export function PostDetailClient({
     important?: boolean;
   }) => {
     setLoading(true);
-    setError("");
     const snapshot = { status: post.status, important: post.important };
     setPost((prev) => ({ ...prev, ...payload }));
     try {
@@ -73,10 +73,11 @@ export function PostDetailClient({
         status: data.status ?? prev.status,
         important: data.important ?? prev.important,
       }));
+      toast.success("Post updated.");
       router.refresh();
     } catch (e) {
       setPost((prev) => ({ ...prev, ...snapshot }));
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -84,7 +85,6 @@ export function PostDetailClient({
 
   const deletePost = async () => {
     setLoading(true);
-    setError("");
     try {
       const res = await fetch(
         `/api/posts/item?id=${encodeURIComponent(post.id)}`,
@@ -92,9 +92,10 @@ export function PostDetailClient({
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to delete post");
+      toast.success("Post deleted.");
       router.push("/posts");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -186,10 +187,7 @@ export function PostDetailClient({
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setError("");
-                  setConfirmDeletePost(true);
-                }}
+                onClick={() => setConfirmDeletePost(true)}
                 className="text-xs text-mute underline hover:text-ink"
               >
                 Delete post
@@ -246,8 +244,6 @@ export function PostDetailClient({
           </Link>
         )}
       </div>
-
-      {error && <p className="text-sm text-ink">{error}</p>}
 
       {!ready ? null : isOwner ? (
         <p className="text-sm text-mute">
@@ -307,13 +303,9 @@ export function PostDetailClient({
           postTitle={post.title}
           authorName={profile?.name ?? post.authorName}
           authorAvatar={profile?.avatar}
-          onClose={() => {
-            setConfirmDeletePost(false);
-            setError("");
-          }}
+          onClose={() => setConfirmDeletePost(false)}
           onConfirm={deletePost}
           loading={loading}
-          error={error}
         />
       )}
     </div>

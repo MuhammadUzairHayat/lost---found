@@ -6,6 +6,7 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import type { UserDirectoryItem, UserDirectoryPage } from "@/lib/api/user-directory";
 import { USERS_DIRECTORY_DEFAULT_LIMIT } from "@/lib/api/user-directory";
 import { userProfileHref } from "@/lib/users/profile-url";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 function SearchIcon({ className = "" }: { className?: string }) {
   return (
@@ -86,12 +87,12 @@ function pageRange(current: number, total: number): number[] {
 }
 
 export function UsersDirectory() {
+  const toast = useToast();
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [data, setData] = useState<UserDirectoryPage | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQ(searchInput.trim()), 300);
@@ -104,7 +105,6 @@ export function UsersDirectory() {
 
   const fetchPage = useCallback(async (targetPage: number, q: string) => {
     setLoading(true);
-    setError("");
     try {
       const params = new URLSearchParams({
         page: String(targetPage),
@@ -117,12 +117,12 @@ export function UsersDirectory() {
       setData(json);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
       setData(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     void fetchPage(page, debouncedQ);
@@ -158,19 +158,6 @@ export function UsersDirectory() {
           <p className="text-xs text-mute tabular-nums shrink-0">{rangeLabel}</p>
         )}
       </div>
-
-      {error && (
-        <div className="rounded-xl border border-line px-4 py-3 text-sm text-ink">
-          {error}
-          <button
-            type="button"
-            onClick={() => void fetchPage(page, debouncedQ)}
-            className="ml-2 underline hover:no-underline"
-          >
-            Retry
-          </button>
-        </div>
-      )}
 
       {loading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

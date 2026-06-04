@@ -17,6 +17,18 @@
   --danger-text: #991b1b;
   --danger-hover-bg: #fee2e2;
   --danger-hover-border: #fca5a5;
+  --toast-error-bg: #fef2f2;
+  --toast-error-border: #fca5a5;
+  --toast-error-text: #991b1b;
+  --toast-error-icon: #dc2626;
+  --toast-success-bg: #f0fdf4;
+  --toast-success-border: #86efac;
+  --toast-success-text: #166534;
+  --toast-success-icon: #16a34a;
+  --toast-warning-bg: #fefce8;
+  --toast-warning-border: #fde047;
+  --toast-warning-text: #854d0e;
+  --toast-warning-icon: #ca8a04;
   --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
   --shadow-card-hover: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
 }
@@ -36,6 +48,18 @@
   --danger-text: #fecaca;
   --danger-hover-bg: #5c1515;
   --danger-hover-border: #991b1b;
+  --toast-error-bg: #450a0a;
+  --toast-error-border: #991b1b;
+  --toast-error-text: #fecaca;
+  --toast-error-icon: #f87171;
+  --toast-success-bg: #052e16;
+  --toast-success-border: #166534;
+  --toast-success-text: #bbf7d0;
+  --toast-success-icon: #4ade80;
+  --toast-warning-bg: #422006;
+  --toast-warning-border: #a16207;
+  --toast-warning-text: #fef08a;
+  --toast-warning-icon: #facc15;
   --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.35), 0 1px 2px -1px rgb(0 0 0 / 0.25);
   --shadow-card-hover: 0 4px 12px -2px rgb(0 0 0 / 0.45), 0 2px 4px -2px rgb(0 0 0 / 0.3);
 }
@@ -135,11 +159,49 @@ body {
   }
 
   .text-error {
-    @apply text-xs text-ink/70 font-medium;
+    @apply text-xs font-medium;
+    color: var(--toast-error-text);
   }
 
   .text-success {
-    @apply text-xs text-subtle;
+    @apply text-xs font-medium;
+    color: var(--toast-success-text);
+  }
+
+  .toast-card {
+    @apply flex items-start gap-3 rounded-2xl border px-4 py-3 shadow-card;
+  }
+
+  .toast-error {
+    background-color: var(--toast-error-bg);
+    border-color: var(--toast-error-border);
+    color: var(--toast-error-text);
+  }
+
+  .toast-success {
+    background-color: var(--toast-success-bg);
+    border-color: var(--toast-success-border);
+    color: var(--toast-success-text);
+  }
+
+  .toast-warning {
+    background-color: var(--toast-warning-bg);
+    border-color: var(--toast-warning-border);
+    color: var(--toast-warning-text);
+  }
+
+  .toast-dismiss {
+    color: inherit;
+    opacity: 0.65;
+  }
+
+  .toast-dismiss:hover {
+    opacity: 1;
+    background-color: rgb(0 0 0 / 0.06);
+  }
+
+  .dark .toast-dismiss:hover {
+    background-color: rgb(255 255 255 / 0.08);
   }
 
   .page-container {
