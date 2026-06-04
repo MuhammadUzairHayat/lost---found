@@ -47,3 +47,50 @@ export function contactHref(contact: ContactInfo): string | null {
   }
   return null;
 }
+
+export type ContactChannel = {
+  id: ContactInfo["method"];
+  label: string;
+  value: string;
+  href: string;
+  external: boolean;
+};
+
+export function getContactChannels(contact: ContactInfo): ContactChannel[] {
+  const channels: ContactChannel[] = [];
+
+  const phone = contact.phone?.trim();
+  if (phone) {
+    channels.push({
+      id: "phone",
+      label: "Call",
+      value: phone,
+      href: `tel:${phone.replace(/\s/g, "")}`,
+      external: false,
+    });
+  }
+
+  const email = contact.email?.trim();
+  if (email) {
+    channels.push({
+      id: "email",
+      label: "Email",
+      value: email,
+      href: `mailto:${email}`,
+      external: false,
+    });
+  }
+
+  const whatsapp = contact.whatsapp?.trim();
+  if (whatsapp) {
+    channels.push({
+      id: "whatsapp",
+      label: "WhatsApp",
+      value: whatsapp,
+      href: `https://wa.me/${whatsapp.replace(/\D/g, "")}`,
+      external: true,
+    });
+  }
+
+  return channels;
+}

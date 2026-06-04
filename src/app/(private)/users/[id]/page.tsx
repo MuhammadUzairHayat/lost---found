@@ -4,8 +4,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { PageShapes } from "@/components/ui/PageShapes";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { ContactActionBar } from "@/components/ui/ContactActionBar";
 import { UserProfilePosts } from "@/components/users/UserProfilePosts";
 import { getSessionFromCookies } from "@/lib/auth/auth";
+import { contactFromStoredUser } from "@/lib/db/users";
 import {
   getCommentCountsByPostIds,
   getPostsByAuthorIdWithHandCounts,
@@ -129,14 +131,19 @@ export default async function UserProfilePage({
               </div>
             </div>
 
-            <div className="mt-6 border-t border-line pt-6">
-              {user.bio ? (
-                <p className="text-sm leading-relaxed text-body whitespace-pre-wrap">
-                  {user.bio}
-                </p>
-              ) : (
-                <p className="text-sm text-mute italic">No bio yet.</p>
-              )}
+            <div className="mt-6 border-t border-line pt-6 space-y-6">
+              <div>
+                <ContactActionBar contact={contactFromStoredUser(user)} />
+              </div>
+              <div>
+                {user.bio ? (
+                  <p className="text-sm leading-relaxed text-body whitespace-pre-wrap">
+                    {user.bio}
+                  </p>
+                ) : (
+                  <p className="text-sm text-mute italic">No bio yet.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>

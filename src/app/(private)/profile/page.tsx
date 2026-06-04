@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { PageShapes } from "@/components/ui/PageShapes";
 import { ProfileForm } from "@/components/profile/ProfileForm";
+import { ContactActionBar } from "@/components/ui/ContactActionBar";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { getSessionFromCookies } from "@/lib/auth/auth";
 import { countPostsByAuthorId } from "@/lib/db/db";
-import { getUserById } from "@/lib/db/users";
+import { contactFromStoredUser, getUserById } from "@/lib/db/users";
 import { redirect } from "next/navigation";
 
 export default async function ProfilePage() {
@@ -45,7 +46,16 @@ export default async function ProfilePage() {
             {user.bio}
           </p>
         )}
-        <p className="mt-2 text-xs text-mute">
+
+        <div className="mt-6 card max-w-md p-5">
+          <ContactActionBar contact={contactFromStoredUser(user)} />
+          <p className="mt-3 text-[10px] text-mute leading-relaxed">
+            Others see this on your profile. Tap a row to call, email, or open
+            WhatsApp.
+          </p>
+        </div>
+
+        <p className="mt-4 text-xs text-mute">
           <Link
             href="/profile/setup?callbackUrl=%2Fprofile"
             className="underline underline-offset-2 hover:text-ink"
