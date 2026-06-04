@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig } from "prisma/config";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -7,6 +7,8 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    // Use process.env (not env()) so `prisma generate` works when DATABASE_URL
+    // is unset at build time (e.g. Vercel postinstall before env vars are wired).
+    url: process.env.DATABASE_URL ?? "",
   },
 });
