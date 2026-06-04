@@ -1,10 +1,9 @@
 export const CATEGORIES = [
-  { id: "vehicles", label: "Vehicles" },
+  { id: "money and cards", label: "Money and Cards" },
   { id: "electronics", label: "Electronics" },
   { id: "documents", label: "Documents & IDs" },
-  { id: "clothing", label: "Clothing" },
   { id: "keys", label: "Keys" },
-  { id: "pets", label: "Pets" },
+  { id: "stationary", label: "Stationary" },
   { id: "bags", label: "Bags & Wallets" },
   { id: "other", label: "Other" },
 ] as const;
