@@ -1,5 +1,5 @@
 import { DEPARTMENTS } from "@/lib/constants/departments";
-import type { ContactMethod } from "@prisma/client";
+import type { ContactMethod } from "@/lib/db/enums";
 
 export const STUDENT_ID_REGEX = /^[A-Z]{2}\d{2}-[A-Z]{4}-\d{4}$/;
 

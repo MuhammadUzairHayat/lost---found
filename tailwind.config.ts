@@ -37,6 +37,7 @@ const config: Config = {
         "hero-lost-in": "hero-lost-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards",
         "hero-lost-out": "hero-lost-out 0.45s ease-in forwards",
         "hero-found-in": "hero-found-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "hero-found-out": "hero-found-out 0.45s ease-in forwards",
         "shape-rise": "shape-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards",
         "shape-fade": "shape-fade 0.8s ease-out forwards",
         "ring-draw": "ring-draw 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards",
@@ -45,6 +46,10 @@ const config: Config = {
         "hero-scope-in": "hero-scope-in 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards",
         "hero-bubble-in": "hero-bubble-in 0.55s cubic-bezier(0.34, 1.2, 0.64, 1) forwards",
         "hero-scan-pulse": "hero-scan-pulse 1.2s ease-out forwards",
+        "posts-row-drop": "posts-row-drop 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "posts-scope-journey": "posts-scope-journey 2.8s cubic-bezier(0.45, 0, 0.2, 1) forwards",
+        "posts-scan-beam": "posts-scan-beam 2.8s ease-out forwards",
+        "posts-dock-pulse": "posts-dock-pulse 2.4s ease-in-out infinite",
       },
       keyframes: {
         "fade-up": {
@@ -159,6 +164,64 @@ const config: Config = {
           "0%": { opacity: "0", transform: "scale(0.6)" },
           "40%": { opacity: "0.35", transform: "scale(1)" },
           "100%": { opacity: "0", transform: "scale(1.35)" },
+        },
+        "hero-found-out": {
+          "0%": {
+            opacity: "1",
+            transform: "translateX(0) scale(1)",
+            filter: "blur(0)",
+          },
+          "100%": {
+            opacity: "0",
+            transform: "translateX(14px) scale(0.94)",
+            filter: "blur(2px)",
+          },
+        },
+        "posts-row-drop": {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(-1.25rem) scale(0.97)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0) scale(1)",
+          },
+        },
+        "posts-scope-journey": {
+          "0%": {
+            opacity: "0",
+            transform: "translate(0%, 55%) scale(0.55) rotate(-12deg)",
+          },
+          "12%": {
+            opacity: "1",
+            transform: "translate(0%, 55%) scale(1) rotate(-8deg)",
+          },
+          "30%": {
+            transform: "translate(-35%, 25%) scale(1.05) rotate(-4deg)",
+          },
+          "50%": {
+            transform: "translate(-55%, 8%) scale(1.08) rotate(0deg)",
+          },
+          "68%": {
+            transform: "translate(-25%, 20%) scale(1) rotate(6deg)",
+          },
+          "82%": {
+            transform: "translate(5%, 5%) scale(0.85) rotate(12deg)",
+          },
+          "100%": {
+            opacity: "0.9",
+            transform: "translate(48%, -48%) scale(0.42) rotate(18deg)",
+          },
+        },
+        "posts-scan-beam": {
+          "0%": { opacity: "0", transform: "scaleY(0.3)" },
+          "12%": { opacity: "0.5", transform: "scaleY(1)" },
+          "68%": { opacity: "0.35", transform: "scaleY(1)" },
+          "100%": { opacity: "0", transform: "scaleY(0.2)" },
+        },
+        "posts-dock-pulse": {
+          "0%, 100%": { opacity: "0.55", transform: "scale(1)" },
+          "50%": { opacity: "0.85", transform: "scale(1.06)" },
         },
       },
     },

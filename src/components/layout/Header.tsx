@@ -219,6 +219,7 @@ export function Header() {
           )}
 
           <button
+            title="Open menu"
             type="button"
             className="btn-ghost !p-2 lg:hidden"
             onClick={() => setMobileOpen((v) => !v)}

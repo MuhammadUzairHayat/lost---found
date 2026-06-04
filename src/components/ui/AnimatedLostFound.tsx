@@ -2,41 +2,84 @@
 
 import { useEffect, useState } from "react";
 
-type Phase = "idle" | "lost-in" | "lost-hold" | "lost-out" | "found-in" | "done";
+type Phase =
+  | "idle"
+  | "lost-in"
+  | "lost-hold"
+  | "lost-out"
+  | "found-in"
+  | "found-hold"
+  | "found-out"
+  | "done";
 
-const LOST_MS = 700;
+const LOST_IN_MS = 700;
 const HOLD_MS = 900;
 const OUT_MS = 450;
-const FOUND_MS = 700;
+const FOUND_IN_MS = 700;
 
-export function AnimatedLostFound({ className = "" }: { className?: string }) {
+export function AnimatedLostFound({
+  className = "",
+  loop = false,
+}: {
+  className?: string;
+  /** When true, cycles Lost ↔ Found indefinitely */
+  loop?: boolean;
+}) {
   const [phase, setPhase] = useState<Phase>("idle");
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("lost-in"), 80);
-    const t2 = setTimeout(() => setPhase("lost-hold"), LOST_MS + 80);
-    const t3 = setTimeout(() => setPhase("lost-out"), LOST_MS + HOLD_MS + 80);
-    const t4 = setTimeout(
-      () => setPhase("found-in"),
-      LOST_MS + HOLD_MS + OUT_MS + 80
-    );
-    const t5 = setTimeout(
-      () => setPhase("done"),
-      LOST_MS + HOLD_MS + OUT_MS + FOUND_MS + 80
-    );
+    let cancelled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    const schedule = (fn: () => void, ms: number) => {
+      timers.push(
+        setTimeout(() => {
+          if (!cancelled) fn();
+        }, ms)
+      );
+    };
+
+    const runCycle = () => {
+      if (cancelled) return;
+
+      setPhase("idle");
+
+      let t = 80;
+      schedule(() => setPhase("lost-in"), t);
+      t += LOST_IN_MS;
+      schedule(() => setPhase("lost-hold"), t);
+      t += HOLD_MS;
+      schedule(() => setPhase("lost-out"), t);
+      t += OUT_MS;
+      schedule(() => setPhase("found-in"), t);
+      t += FOUND_IN_MS;
+
+      if (loop) {
+        schedule(() => setPhase("found-hold"), t);
+        t += HOLD_MS;
+        schedule(() => setPhase("found-out"), t);
+        t += OUT_MS;
+        schedule(runCycle, t);
+      } else {
+        schedule(() => setPhase("done"), t);
+      }
+    };
+
+    runCycle();
 
     return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-      clearTimeout(t4);
-      clearTimeout(t5);
+      cancelled = true;
+      timers.forEach(clearTimeout);
     };
-  }, []);
+  }, [loop]);
 
   const showLost =
     phase === "lost-in" || phase === "lost-hold" || phase === "lost-out";
-  const showFound = phase === "found-in" || phase === "done";
+  const showFound =
+    phase === "found-in" ||
+    phase === "found-hold" ||
+    phase === "found-out" ||
+    phase === "done";
 
   const lostAnim =
     phase === "lost-in"
@@ -46,7 +89,11 @@ export function AnimatedLostFound({ className = "" }: { className?: string }) {
         : "";
 
   const foundAnim =
-    phase === "found-in" ? "animate-hero-found-in" : "";
+    phase === "found-in"
+      ? "animate-hero-found-in"
+      : phase === "found-out"
+        ? "animate-hero-found-out"
+        : "";
 
   return (
     <span
@@ -56,7 +103,7 @@ export function AnimatedLostFound({ className = "" }: { className?: string }) {
       {showLost && (
         <span
           className={`absolute inset-0 inline-flex items-center justify-center font-semibold text-ink word-lost-outline ${lostAnim}`}
-          aria-hidden={showFound ? "true" : undefined}
+          aria-hidden={showFound}
         >
           Lost
         </span>

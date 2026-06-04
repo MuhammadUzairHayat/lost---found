@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import type { ContactMethod } from "@prisma/client";
+import { isContactMethod } from "@/lib/db/enums";
 import { parseJsonBody } from "@/lib/api/request";
 import { toPublicUser } from "@/lib/api/responses";
 import {
@@ -8,14 +8,9 @@ import {
 } from "@/lib/api/session";
 import { completeUserProfile } from "@/lib/db/users";
 
-const CONTACT_METHODS = new Set<ContactMethod>(["EMAIL", "PHONE", "WHATSAPP"]);
-
 function parseProfileBody(body: Record<string, unknown>) {
   const contactMethod = body.contactMethod;
-  if (
-    typeof contactMethod !== "string" ||
-    !CONTACT_METHODS.has(contactMethod as ContactMethod)
-  ) {
+  if (typeof contactMethod !== "string" || !isContactMethod(contactMethod)) {
     return null;
   }
 
@@ -23,7 +18,7 @@ function parseProfileBody(body: Record<string, unknown>) {
     name: typeof body.name === "string" ? body.name : "",
     studentId: typeof body.studentId === "string" ? body.studentId : "",
     department: typeof body.department === "string" ? body.department : "",
-    contactMethod: contactMethod as ContactMethod,
+    contactMethod,
     contactValue: typeof body.contactValue === "string" ? body.contactValue : "",
     bio: typeof body.bio === "string" ? body.bio : undefined,
     avatar:

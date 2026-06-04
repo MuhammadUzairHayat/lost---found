@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
-import type { ContactMethod, Prisma } from "@prisma/client";
+import type { InputJsonValue } from "@prisma/client/runtime/client";
+import type { ContactMethod } from "@/lib/db/enums";
 import { prisma } from "@/lib/prisma";
 import {
   buildContactInfo,
@@ -134,7 +135,7 @@ export async function createUser(input: {
         email: normalized,
         passwordHash: input.passwordHash,
         name: input.name?.trim() ?? "",
-        contact: emptyContactJson() as unknown as Prisma.InputJsonValue,
+        contact: emptyContactJson() as unknown as InputJsonValue,
         isProfileComplete: false,
       },
     });
@@ -200,7 +201,7 @@ async function prismaCompleteUserProfile(
       avatar: input.avatar || null,
       contactMethod: input.contactMethod,
       contactValue: input.contactValue.trim(),
-      contact: contact as unknown as Prisma.InputJsonValue,
+      contact: contact as unknown as InputJsonValue,
       isProfileComplete: true,
     },
   });
@@ -242,7 +243,7 @@ export async function updateUserProfileLegacy(
         name: trimmedName,
         contactMethod: method,
         contactValue: value,
-        contact: syncedContact as unknown as Prisma.InputJsonValue,
+        contact: syncedContact as unknown as InputJsonValue,
       },
     });
     return { user: mapPrismaUser(updated) };

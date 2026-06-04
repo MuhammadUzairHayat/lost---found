@@ -1,4 +1,4 @@
-import type { ContactMethod } from "@prisma/client";
+import type { ContactMethod } from "@/lib/db/enums";
 import type { ContactInfo } from "@/lib/types";
 import type { ContactMethodId } from "@/lib/constants/constants";
 

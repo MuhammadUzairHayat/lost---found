@@ -1,4 +1,4 @@
-import type { ContactMethod } from "@prisma/client";
+import type { ContactMethod } from "@/lib/db/enums";
 import type { StoredUser } from "@/lib/db/users";
 import type { ContactInfo, Hand, Post } from "@/lib/types";
 
