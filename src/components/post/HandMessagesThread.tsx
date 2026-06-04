@@ -7,16 +7,145 @@ import { useProfile } from "@/components/profile/ProfileProvider";
 import type { Hand, HandMessageWithReplies, Post } from "@/lib/types";
 import { timeAgo } from "@/lib/utils/time";
 
+function MessageBody({
+  node,
+  currentUserId,
+  postAuthorId,
+  onEdit,
+  onDelete,
+  actionLoading,
+}: {
+  node: HandMessageWithReplies;
+  currentUserId?: string;
+  postAuthorId: string;
+  onEdit: (messageId: string, body: string) => Promise<void>;
+  onDelete: (messageId: string) => Promise<void>;
+  actionLoading: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(node.body);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const canEdit = currentUserId === node.userId;
+  const canDelete = canEdit || currentUserId === postAuthorId;
+
+  const saveEdit = async () => {
+    if (!draft.trim()) return;
+    try {
+      await onEdit(node.id, draft);
+      setEditing(false);
+    } catch {
+      /* parent shows error */
+    }
+  };
+
+  if (editing) {
+    return (
+      <div className="mt-0.5 space-y-2">
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          rows={2}
+          className="field-input resize-none text-xs"
+          autoFocus
+        />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={saveEdit}
+            disabled={actionLoading || !draft.trim()}
+            className="rounded-full bg-ink px-3 py-1 text-xs text-paper disabled:opacity-50"
+          >
+            {actionLoading ? "Saving…" : "Save"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(node.body);
+              setEditing(false);
+            }}
+            className="text-xs text-mute underline hover:text-ink"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <p className="mt-0.5 text-xs leading-relaxed text-body whitespace-pre-wrap break-words">
+        {node.body}
+      </p>
+      {(canEdit || canDelete) && (
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => {
+                setDraft(node.body);
+                setEditing(true);
+              }}
+              className="text-[10px] font-medium uppercase tracking-wide text-mute hover:text-ink"
+            >
+              Edit
+            </button>
+          )}
+          {canDelete && !confirmDelete && (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="text-[10px] font-medium uppercase tracking-wide text-mute hover:text-ink"
+            >
+              Delete
+            </button>
+          )}
+          {confirmDelete && (
+            <>
+              <button
+                type="button"
+                onClick={() => onDelete(node.id)}
+                disabled={actionLoading}
+                className="text-[10px] font-medium uppercase tracking-wide text-ink disabled:opacity-50"
+              >
+                {actionLoading ? "…" : "Confirm"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                className="text-[10px] text-mute underline hover:text-ink"
+              >
+                Cancel
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
 function MessageNode({
   node,
   depth,
   canReply,
+  currentUserId,
+  postAuthorId,
   onReply,
+  onEdit,
+  onDelete,
+  actionLoading,
 }: {
   node: HandMessageWithReplies;
   depth: number;
   canReply: boolean;
+  currentUserId?: string;
+  postAuthorId: string;
   onReply: (id: string, userName: string) => void;
+  onEdit: (messageId: string, body: string) => Promise<void>;
+  onDelete: (messageId: string) => Promise<void>;
+  actionLoading: boolean;
 }) {
   return (
     <li className={depth > 0 ? "ml-4 border-l border-line pl-3" : ""}>
@@ -37,9 +166,14 @@ function MessageNode({
             />
             <span className="text-[10px] text-mute">{timeAgo(node.createdAt)}</span>
           </div>
-          <p className="mt-0.5 text-xs leading-relaxed text-body whitespace-pre-wrap">
-            {node.body}
-          </p>
+          <MessageBody
+            node={node}
+            currentUserId={currentUserId}
+            postAuthorId={postAuthorId}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            actionLoading={actionLoading}
+          />
           {canReply && depth < 4 && (
             <button
               type="button"
@@ -59,7 +193,12 @@ function MessageNode({
               node={reply}
               depth={depth + 1}
               canReply={canReply}
+              currentUserId={currentUserId}
+              postAuthorId={postAuthorId}
               onReply={onReply}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              actionLoading={actionLoading}
             />
           ))}
         </ul>
@@ -80,6 +219,7 @@ export function HandMessagesThread({
   const [total, setTotal] = useState(0);
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
   const [replyTo, setReplyTo] = useState<{ id: string; userName: string } | null>(
     null
@@ -133,6 +273,44 @@ export function HandMessagesThread({
     }
   };
 
+  const editMessage = async (messageId: string, text: string) => {
+    setError("");
+    setActionLoading(true);
+    try {
+      const res = await fetch("/api/posts/hand/messages", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId, body: text }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update message");
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+      throw e;
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const deleteMessage = async (messageId: string) => {
+    setError("");
+    setActionLoading(true);
+    try {
+      const res = await fetch(
+        `/api/posts/hand/messages?messageId=${encodeURIComponent(messageId)}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete message");
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <div className="mt-3 border-t border-line pt-3">
       <p className="text-[10px] uppercase tracking-wider text-mute font-medium mb-2">
@@ -154,7 +332,12 @@ export function HandMessagesThread({
               node={node}
               depth={0}
               canReply={!!canSend}
+              currentUserId={profile?.id}
+              postAuthorId={post.authorId}
               onReply={(id, userName) => setReplyTo({ id, userName })}
+              onEdit={editMessage}
+              onDelete={deleteMessage}
+              actionLoading={actionLoading}
             />
           ))}
         </ul>

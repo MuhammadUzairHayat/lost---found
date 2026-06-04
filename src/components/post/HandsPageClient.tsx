@@ -47,6 +47,17 @@ export function HandsPageClient({
     setHands(data.hands);
   }, [post.id]);
 
+  const onHandUpdated = (updated: Hand) => {
+    setHands((prev) =>
+      prev.map((h) => (h.id === updated.id ? { ...h, ...updated } : h))
+    );
+  };
+
+  const onHandRemoved = async () => {
+    await refresh();
+    setModal(null);
+  };
+
   const closeModal = () => {
     setModal(null);
     setError("");
@@ -162,7 +173,8 @@ export function HandsPageClient({
           </h2>
           <p className="mt-1 text-xs text-mute max-w-md">
             Everyone can read messages on each hand. Only the poster and the
-            person who raised can reply.
+            person who raised can reply. You can edit or delete your own hand
+            note and messages.
           </p>
         </div>
 
@@ -220,7 +232,13 @@ export function HandsPageClient({
               id={hand.userId === profile?.id ? "my-hand" : undefined}
               className="rounded-2xl border border-line p-4"
             >
-              <HandRaisedCard hand={hand} highlight={hand.userId === profile?.id} />
+              <HandRaisedCard
+                hand={hand}
+                highlight={hand.userId === profile?.id}
+                isOwn={hand.userId === profile?.id}
+                onUpdated={onHandUpdated}
+                onRemoved={onHandRemoved}
+              />
               <HandMessagesThread hand={hand} post={post} />
             </li>
           ))}
